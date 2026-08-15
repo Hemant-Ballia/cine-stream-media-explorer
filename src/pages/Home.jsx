@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, X, Heart, ChevronLeft, ChevronRight, Film, Star } from "lucide-react";
+import { Search, X, Heart, ChevronLeft, ChevronRight, Film, Star, Loader2 } from "lucide-react";
 import heroBg from "../assets/h.webp";
 import { useFavorites } from "../context/FavoritesContext";
 
@@ -236,7 +236,9 @@ function Home() {
         )}
 
         {loading && !search.trim() && (
-          <div className="py-20 text-center text-sm text-gray-400">Loading movies...</div>
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-red-600 animate-spin" />
+          </div>
         )}
 
         {!search.trim() && topFiveMovies.length > 0 && (
@@ -338,7 +340,9 @@ function Home() {
         )}
 
         {loadingMore && (
-          <div className="py-8 text-center text-xs text-gray-400">Loading more movies...</div>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 text-red-600 animate-spin" />
+          </div>
         )}
       </section>
     </main>
