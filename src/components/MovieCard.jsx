@@ -1,6 +1,6 @@
 import { Film, Heart, Star } from "lucide-react";
 import { useFavorites } from "../context/FavoritesContext";
-import { getImageUrl } from "../utils/image";
+import { getImageUrl } from "../utils/helpers";
 
 export default function MovieCard({ movie, rank }) {
   const { toggleFavorite, isFavorite } = useFavorites();
