@@ -1,11 +1,67 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Search, Heart, ChevronLeft, ChevronRight, Film, Star } from "lucide-react";
+import { Search, X, Heart, ChevronLeft, ChevronRight, Film, Star } from "lucide-react";
 import heroBg from "../assets/h.webp";
 import { useFavorites } from "../context/FavoritesContext";
 
 const API_KEY = import.meta.env.VITE_TMDB_KEY;
 const API_URL = "https://api.themoviedb.org/3";
 const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
+
+const MovieCard = ({ movie, rank, isFavorite, toggleFavorite }) => {
+  const posterUrl = movie.poster_path ? `${IMAGE_URL}${movie.poster_path}` : null;
+  const favorite = isFavorite(movie.id);
+
+  return (
+    <div className="flex items-center shrink-0 w-full">
+      {rank && (
+        <span className="text-6xl sm:text-8xl font-black text-transparent [-webkit-text-stroke:2px_#64748b] select-none -mr-8 z-10">
+          {rank}
+        </span>
+      )}
+      <article className="group/card relative overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-700 w-full">
+        <div className="relative aspect-[2/3] overflow-hidden bg-gray-950">
+          {posterUrl ? (
+            <img
+              src={posterUrl}
+              alt={movie.title}
+              loading="lazy"
+              className="h-full w-full object-cover transition duration-300 group-hover/card:scale-105"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center p-2 text-center text-xs text-gray-500">
+              <Film className="w-8 h-8 mb-1" /> No Poster
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={() => toggleFavorite(movie)}
+            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur transition hover:bg-black"
+            aria-label="Toggle favorite"
+          >
+            <Heart
+              size={16}
+              className={favorite ? "fill-red-500 text-red-500" : "text-white"}
+            />
+          </button>
+        </div>
+
+        <div className="p-3">
+          <h3 className="truncate text-sm font-medium text-white" title={movie.title}>
+            {movie.title}
+          </h3>
+          <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
+            <span>{movie.release_date ? movie.release_date.slice(0, 4) : "N/A"}</span>
+            <span className="text-gray-300 flex items-center gap-1">
+              <Star size={12} className="fill-amber-400 text-amber-400" />
+              {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
+            </span>
+          </div>
+        </div>
+      </article>
+    </div>
+  );
+};
 
 function Home() {
   const [movies, setMovies] = useState([]);
@@ -82,15 +138,16 @@ function Home() {
   }, [fetchPopular]);
 
   useEffect(() => {
+    const query = search.trim();
+    if (!query) {
+      setSearchResults([]);
+      return;
+    }
+
     const timer = setTimeout(() => {
-      const query = search.trim();
-      if (query) {
-        setPage(1);
-        fetchSearch(query, 1);
-      } else {
-        setSearchResults([]);
-      }
-    }, 500);
+      setPage(1);
+      fetchSearch(query, 1);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [search, fetchSearch]);
@@ -127,8 +184,6 @@ function Home() {
 
   return (
     <main className="min-h-screen bg-[#020617] text-white">
-      
-      {/* Hero Section */}
       <section className="relative w-full overflow-hidden bg-cover bg-center bg-no-repeat pb-40 pt-24 sm:pt-32" style={{ backgroundImage: `url(${heroBg})` }}>
         <div className="absolute inset-0 bg-black/70" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-transparent via-black/50 to-[#020617]" />
@@ -149,9 +204,19 @@ function Home() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search movies, blockbusters, genres..."
-              className="h-14 w-full bg-transparent px-3 text-sm text-white outline-none placeholder:text-gray-400"
+              className="h-14 w-full bg-transparent px-3 text-sm text-white outline-none placeholder:text-gray-400 [&::-webkit-search-cancel-button]:appearance-none"
               aria-label="Search movies"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                className="shrink-0 text-red-500 hover:text-red-400 transition p-1"
+                aria-label="Clear search"
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -163,9 +228,7 @@ function Home() {
         </div>
       </section>
 
-      {/* Content Section */}
       <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-20 pt-4">
-        
         {error && (
           <div className="rounded-xl border border-red-900 bg-red-950/40 p-4 text-center text-sm text-red-400 mb-6">
             {error}
@@ -176,7 +239,6 @@ function Home() {
           <div className="py-20 text-center text-sm text-gray-400">Loading movies...</div>
         )}
 
-        {/* --- TOP 5 SLIDER (Optimized width to cover space) --- */}
         {!search.trim() && topFiveMovies.length > 0 && (
           <div className="space-y-4 mb-12">
             <div className="flex items-center justify-between border-b border-gray-800 pb-4">
@@ -198,60 +260,16 @@ function Home() {
                 className="flex gap-6 overflow-x-auto scrollbar-none scroll-smooth pb-4 pt-2 px-1"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
               >
-                {topFiveMovies.map((movie, index) => {
-                  const posterUrl = movie.poster_path ? `${IMAGE_URL}${movie.poster_path}` : null;
-                  const favorite = isFavorite(movie.id);
-
-                  return (
-                    <div key={movie.id} className="w-[180px] sm:w-[215px] flex items-center shrink-0">
-                      <span className="text-6xl sm:text-8xl font-black text-transparent [-webkit-text-stroke:2px_#64748b] select-none -mr-8 z-10">
-                        {index + 1}
-                      </span>
-
-                      <article className="group/card relative overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-700 w-full">
-                        <div className="relative aspect-[2/3] overflow-hidden bg-gray-950">
-                          {posterUrl ? (
-                            <img
-                              src={posterUrl}
-                              alt={movie.title}
-                              loading="lazy"
-                              className="h-full w-full object-cover transition duration-300 group-hover/card:scale-105"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center p-2 text-center text-xs text-gray-500">
-                              <Film className="w-8 h-8 mb-1" /> No Poster
-                            </div>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => toggleFavorite(movie)}
-                            className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur transition hover:bg-black"
-                            aria-label="Toggle favorite"
-                          >
-                            <Heart
-                              size={16}
-                              className={favorite ? "fill-red-500 text-red-500" : "text-white"}
-                            />
-                          </button>
-                        </div>
-
-                        <div className="p-3">
-                          <h3 className="truncate text-sm font-medium text-white" title={movie.title}>
-                            {movie.title}
-                          </h3>
-                          <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
-                            <span>{movie.release_date ? movie.release_date.slice(0, 4) : "N/A"}</span>
-                            <span className="text-gray-300 flex items-center gap-1">
-                              <Star size={12} className="fill-amber-400 text-amber-400" />
-                              {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-                            </span>
-                          </div>
-                        </div>
-                      </article>
-                    </div>
-                  );
-                })}
+                {topFiveMovies.map((movie, index) => (
+                  <div key={movie.id} className="w-[180px] sm:w-[215px] flex items-center shrink-0">
+                    <MovieCard 
+                      movie={movie} 
+                      rank={index + 1} 
+                      isFavorite={isFavorite} 
+                      toggleFavorite={toggleFavorite} 
+                    />
+                  </div>
+                ))}
               </div>
 
               <button
@@ -265,7 +283,6 @@ function Home() {
           </div>
         )}
 
-        {/* --- REMAINING MOVIES GRID --- */}
         {!search.trim() && remainingMovies.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-gray-800 pb-4">
@@ -274,62 +291,19 @@ function Home() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-              {remainingMovies.map((movie) => {
-                const posterUrl = movie.poster_path ? `${IMAGE_URL}${movie.poster_path}` : null;
-                const favorite = isFavorite(movie.id);
-
-                return (
-                  <article
-                    key={movie.id}
-                    className="group overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-700"
-                  >
-                    <div className="relative aspect-[2/3] overflow-hidden bg-gray-950">
-                      {posterUrl ? (
-                        <img
-                          src={posterUrl}
-                          alt={movie.title}
-                          loading="lazy"
-                          className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                        />
-                      ) : (
-                        <div className="flex h-full items-center justify-center p-2 text-center text-xs text-gray-500">
-                          <Film className="w-8 h-8 mb-1" /> No Poster
-                        </div>
-                      )}
-
-                      <button
-                        type="button"
-                        onClick={() => toggleFavorite(movie)}
-                        className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur transition hover:bg-black"
-                        aria-label="Toggle favorite"
-                      >
-                        <Heart
-                          size={16}
-                          className={favorite ? "fill-red-500 text-red-500" : "text-white"}
-                        />
-                      </button>
-                    </div>
-
-                    <div className="p-3">
-                      <h3 className="truncate text-sm font-medium text-white" title={movie.title}>
-                        {movie.title}
-                      </h3>
-                      <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
-                        <span>{movie.release_date ? movie.release_date.slice(0, 4) : "N/A"}</span>
-                        <span className="text-gray-300 flex items-center gap-1">
-                          <Star size={12} className="fill-amber-400 text-amber-400" />
-                          {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+              {remainingMovies.map((movie) => (
+                <div key={movie.id}>
+                  <MovieCard 
+                    movie={movie} 
+                    isFavorite={isFavorite} 
+                    toggleFavorite={toggleFavorite} 
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}
 
-        {/* --- SEARCH RESULTS GRID --- */}
         {search.trim() && (
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-gray-800 pb-4">
@@ -348,55 +322,14 @@ function Home() {
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                 {searchResults.map((movie, index) => {
                   const lastMovie = index === searchResults.length - 1;
-                  const posterUrl = movie.poster_path ? `${IMAGE_URL}${movie.poster_path}` : null;
-                  const favorite = isFavorite(movie.id);
-
                   return (
-                    <article
-                      key={`${movie.id}-${index}`}
-                      ref={lastMovie ? lastMovieRef : null}
-                      className="group overflow-hidden rounded-xl border border-gray-800 bg-gray-900 shadow-md transition duration-300 hover:-translate-y-1 hover:border-gray-700"
-                    >
-                      <div className="relative aspect-[2/3] overflow-hidden bg-gray-950">
-                        {posterUrl ? (
-                          <img
-                            src={posterUrl}
-                            alt={movie.title}
-                            loading="lazy"
-                            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center p-2 text-center text-xs text-gray-500">
-                            <Film className="w-8 h-8 mb-1" /> No Poster
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => toggleFavorite(movie)}
-                          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 backdrop-blur transition hover:bg-black"
-                          aria-label="Toggle favorite"
-                        >
-                          <Heart
-                            size={16}
-                            className={favorite ? "fill-red-500 text-red-500" : "text-white"}
-                          />
-                        </button>
-                      </div>
-
-                      <div className="p-3">
-                        <h3 className="truncate text-sm font-medium text-white" title={movie.title}>
-                          {movie.title}
-                        </h3>
-                        <div className="mt-1.5 flex items-center justify-between text-xs text-gray-400">
-                          <span>{movie.release_date ? movie.release_date.slice(0, 4) : "N/A"}</span>
-                          <span className="text-gray-300 flex items-center gap-1">
-                            <Star size={12} className="fill-amber-400 text-amber-400" />
-                            {movie.vote_average ? movie.vote_average.toFixed(1) : "N/A"}
-                          </span>
-                        </div>
-                      </div>
-                    </article>
+                    <div key={`${movie.id}-${index}`} ref={lastMovie ? lastMovieRef : null}>
+                      <MovieCard 
+                        movie={movie} 
+                        isFavorite={isFavorite} 
+                        toggleFavorite={toggleFavorite} 
+                      />
+                    </div>
                   );
                 })}
               </div>
