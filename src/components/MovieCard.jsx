@@ -1,14 +1,13 @@
 import { Film, Heart, Star } from "lucide-react";
 import { useFavorites } from "../context/FavoritesContext";
-
-const IMAGE_URL = "https://image.tmdb.org/t/p/w500";
+import { getImageUrl } from "../utils/image";
 
 export default function MovieCard({ movie, rank }) {
   const { toggleFavorite, isFavorite } = useFavorites();
   
   if (!movie) return null;
 
-  const posterUrl = movie.poster_path ? `${IMAGE_URL}${movie.poster_path}` : null;
+  const posterUrl = getImageUrl(movie.poster_path);
   const favorite = isFavorite(movie.id);
 
   return (
