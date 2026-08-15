@@ -12,14 +12,22 @@ export default function Favorites() {
       <div className="max-w-7xl mx-auto">
         
         {/* Header Section */}
-        <div className="flex items-center gap-3 mb-8 border-b border-gray-800 pb-5">
-          <div className="p-3 rounded-xl bg-red-600/10 border border-red-600/20 text-red-500">
-            <Heart className="w-6 h-6 fill-current" />
+        <div className="flex items-center justify-between border-b border-gray-800 pb-5 mb-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-red-600/10 border border-red-600/20 text-red-500">
+              <Heart className="w-6 h-6 fill-current" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">My Favorites</h1>
+              <p className="text-xs sm:text-sm text-gray-400">Your personalized watchlist synchronized locally.</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-white">My Favorites</h1>
-            <p className="text-xs sm:text-sm text-gray-400">Your personalized watchlist synchronized locally.</p>
-          </div>
+
+          {favorites.length > 0 && (
+            <span className="text-xs sm:text-sm text-gray-400">
+              {favorites.length} {favorites.length === 1 ? "title" : "titles"}
+            </span>
+          )}
         </div>
 
         {/* Empty State */}
@@ -36,7 +44,7 @@ export default function Favorites() {
             </Link>
           </div>
         ) : (
-          /* Favorites Grid */
+          /* Favorites Grid - Matched with Home page columns */
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {favorites.map((movie) => (
               <MovieCard key={movie.id} movie={movie} />
